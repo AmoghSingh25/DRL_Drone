@@ -1,8 +1,0 @@
-Adaptive Learning Rate
-Unbiased Memory
-Dynamic replay memory training
-Discrete decision systems
-Seperate model for prev action and reward(?) (to better fit exploration)
-Use inputs from back and front models to check collision, if no collision for action given by prev action and reward model, go ahead
-use SVM to understand collision or not(?)
-

@@ -19,8 +19,8 @@ env = AirSimDroneEnv(step_length=1, max_steps=50, clock_speed=1)
 image_shape = (144,256,1)
 state_shape = env.observation_space.shape
 num_actions = env.action_space.n
-memory = ReplayMemory(state_shape, load_memory=True)
-agent = DQNAgent(state_shape, num_actions, replay_memory = memory, load_model=True)
+memory = ReplayMemory(state_shape, load_memory=True, length=10000)
+agent = DQNAgent(state_shape, num_actions, replay_memory = memory, load_model=True, epsilon_decay=0.90)
 
 action_map = [
     "+x",
@@ -35,7 +35,7 @@ action_map = [
 try:
 
     for episode in range(1000):
-        state = env.reset()
+        state, info = env.reset()
         # state = np.reshape(state, [1, *state_shape])
 
         total_reward = 0
@@ -47,7 +47,7 @@ try:
                 os.system('cls')
             state1 = np.reshape(state[0], [1, *image_shape])
             state2 = np.reshape(state[1], [1, *image_shape])
-            action = agent.select_action(state1, state2)
+            action = agent.select_action(state1, state2, info)
             if(action == -1):
                 print("ERROR IN ACTION SELECT")
                 # os.system('cls')
@@ -73,9 +73,10 @@ try:
                     "reward": reward,
                     "next_state": next_state,
                     "done": done,
+                    "info": info
                 }
             )
-            agent.train(state, action, reward, next_state, done)
+            agent.train(state, action, reward, next_state,info, done)
 
             total_reward += reward
             step_count += 1
@@ -84,7 +85,7 @@ try:
             if done:
                 break
 
-        print(f"Episode: {episode + 1}, Total Reward: {total_reward}")
+        print(f"Episode: {episode + 1}, Total Reward: {total_reward}, Exploration Rate:{agent.epsilon}")
         log_value('EpReward', total_reward,episode+1)
         log_value('Steps',step_count , episode+1)
         log_value('AvgEpReward',total_reward / step_count , episode+1)
@@ -93,12 +94,12 @@ try:
     print("Saving model")
     subprocess.call("TASKKILL /F /IM Blocks.exe", shell=True)
     
-except:
-    print("Saving model")
-    agent.save_model()
-    memory.save_file()
-# except Exception as e:
-#     print(e)
+# except:
 #     print("Saving model")
 #     agent.save_model()
 #     memory.save_file()
+except Exception as e:
+    print(e)
+#     print("Saving model")
+    agent.save_model()
+    memory.save_file()

@@ -14,27 +14,27 @@ class AirSimDroneEnv(Env):
         self.n = n
         self.drone = airsim.MultirotorClient()
         self.step_length = step_length
-        self.goal_states = [[13,1],[13,-12]]
+        # self.goal_states = [[13,1],[13,-12]]
+        self.goal_states = [7, 17, 27.5, 45, 57]
         self.level_no = 0
-        self.observation_space = np.array([
-            spaces.Box(low=0, high = 255,shape=image_shape, dtype=np.float32),
-            spaces.Box(low=0, high = 255,shape=image_shape, dtype=np.float32),
-        ])
+        # self.observation_space = spaces.Dict([
+        #     spaces.Box(low=0, high = 255,shape=image_shape, dtype=np.float32),
+        #     spaces.Box(low=0, high = 255,shape=image_shape, dtype=np.float32),
+        # ])
 
-
-        # self.observation_space = spaces.Dict({'back_image': spaces.Box(low=0, high=255, shape=image_shape, dtype=np.float32),
-        # 'front_image': spaces.Box(low=0, high=255, shape=image_shape, dtype=np.float32),
+        self.observation_space = spaces.Dict({
+        'front_image': spaces.Box(low=0, high=255, shape=image_shape, dtype=np.float32),
+        'back_image': spaces.Box(low=0, high=255, shape=image_shape, dtype=np.float32),
         # 'velocity': spaces.Box(low=-1, high=1, shape=(3,), dtype=np.float32),
         # 'position': spaces.Box(low=-np.inf, high=np.inf, shape=(3,), dtype=np.float32),
         # 'goal': spaces.Box(low=-np.inf, high=np.inf, shape=(2,), dtype=np.float32),
-        # })
-        self.clock_speed = clock_speed
 
         # 'front_image': spaces.Box(low=0, high=255, shape=self.reduced_shape, dtype=np.float32),
         # 'back_image': spaces.Box(low=0, high=255, shape=self.reduced_shape, dtype=np.float32),
-        # })
+        })
         # self.velocity = np.array([0, 0, 0], dtype=np.float32)
 
+        self.clock_speed = clock_speed
         self.state = {
             "position": np.zeros(3),
             "collision": False,
@@ -104,16 +104,16 @@ class AirSimDroneEnv(Env):
 
     def _get_obs(self):
         responses = self.drone.simGetImages(self.image_request)
-        resp = []
+        resp = {}
         # resp = np.array(responses[0].image_data_float).reshape(responses[0].height, responses[0].width, 1)
         for i in range(len(responses)):
             responses[i] = self.transform_obs(responses[i])
-            resp.append(responses[i])
+            # resp.append(responses[i])
             # responses[i] = self.compress_image(responses[i])
-        # resp['front_image'] = responses[0]
+        resp['front_image'] = responses[0]
         # resp['left_image'] = responses[1]
         # resp['right_image'] = responses[2]
-        # resp['back_image'] = responses[1]
+        resp['back_image'] = responses[1]
         # resp['velocity'] = np.array([self.drone.getMultirotorState().kinematics_estimated.linear_velocity.x_val, self.drone.getMultirotorState().kinematics_estimated.linear_velocity.y_val, self.drone.getMultirotorState().kinematics_estimated.linear_velocity.z_val])
         # resp['position'] = np.array([self.drone.getMultirotorState().kinematics_estimated.position.x_val, self.drone.getMultirotorState().kinematics_estimated.position.y_val, self.drone.getMultirotorState().kinematics_estimated.position.z_val])
         # resp['goal'] = np.array(self.goal_states[self.level_no])
@@ -192,7 +192,7 @@ class AirSimDroneEnv(Env):
         )
 
         dist_to_goal = np.linalg.norm(
-            np.array([self.state["position"].x_val, self.state["position"].y_val]) - np.array([self.goal_states[self.level_no][0],self.goal_states[self.level_no][1]])
+            np.array([self.state["position"].y_val]) - np.array(self.goal_states[self.level_no])
         )
 
 
@@ -206,7 +206,7 @@ class AirSimDroneEnv(Env):
         if self.state["collision"]:
             reward = -1000
             done = True
-        elif dist_to_goal < 4:
+        elif dist_to_goal < 2:
             reward = 100 + (100 * self.level_no)
             self.level_no += 1
             print("reached goal ", self.level_no)

@@ -15,10 +15,10 @@ log_path = os.path.join('Training', 'logs')
 
 
 
-log_path = os.path.join('Training', 'logs', 'Small_env_DDPG')
-save_path = os.path.join('Training', 'SavedModels', 'Small_env_DDPG_1')
-backup_path = os.path.join('Training', 'Backup', 'Small_env_DDPG_1')
-env = AirSimDroneEnv(step_length=1, max_steps=50, clock_speed=1)
+log_path = os.path.join('Training', 'logs', 'Small_env_DQN')
+save_path = os.path.join('Training', 'SavedModels', 'Small_env_DQN_1')
+backup_path = os.path.join('Training', 'Backup', 'Small_env_DQN_1')
+env = AirSimDroneEnv(step_length=1, max_steps=50, clock_speed=1, image_shape=(144,256,1))
 # print(env.action_space.shape)
 # n_actions = env.action_space.shape[-1]
 # action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
@@ -39,9 +39,9 @@ env = Monitor(env, log_path)
 # model = QRDQN('MultiInputPolicy', env, verbose=1, tensorboard_log = log_path,device="cuda", learning_rate=0.1, replay_buffer_kwargs={'handle_timeout_termination': False}, buffer_size=1000)
 # model = A2C.load(os.path.join('Training', 'SavedModels', 'A2C_100_4_Camera_LR_0.1_MaxStep_3'), env, verbose=1, tensorboard_log = log_path, learning_rate=0.5)
 # model = sb3.DDPG('MultiInputPolicy', env, verbose=1, device="cuda", learning_rate=0.2, buffer_size=1000, learning_starts=100)
-# model = sb3.DQN('MultiInputPolicy', env, verbose=1, device="cuda", learning_rate=0.2, buffer_size = 1000)
+model = sb3.DQN('MultiInputPolicy', env, verbose=1, device="cuda", learning_rate=0.2, buffer_size = 1000)
 # model = sb3.DQN('MlpPolicy', env, verbose=1, device="cuda", learning_rate=0.2, buffer_size = 10000)
-model = sb3.DQN.load(save_path, env)
+# model = sb3.DQN.load(save_path, env)
 try:
     print("Start training")
     model.learn(10000)
